@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-us" xmlns="http://www.w3.org/1999/xhtml" prefix="og: http://ogp.me/ns#">
+    <head>	
+<script>
+let socket = new WebSocket("ws://node.derofoundation.org:11012/ws");
+
+socket.onopen = function(e) {
+  alert("[open] Connection established");
+  alert("Sending to server");
+  socket.send('{"jsonrpc": "2.0","id": "1","method": "DERO.GetTxPool"}');
+};
+
+ //socket.send('{"jsonrpc": "2.0", "id": "1", "method": "DERO.GetBlock", "params": {"height": 420 }}');
+
+
+var lastObj;
+socket.onmessage = function(event) {
+ console.log(`[message] Data received from server: ${event.data}`);
+ lastObj = JSON.parse(event.data);
+if(typeof lastObj.result !== 'undefined' ){
+
+
+
+if(typeof lastObj.result.txs !== 'undefined' && typeof lastObj.result.txs_as_hex === 'undefined'){
+
+
+getTxs(lastObj.result.txs);
+
+
+}
+
+} 
+};
+
+
+
+
+socket.onclose = function(event) {
+  if (event.wasClean) {
+    alert(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
+  } else {
+    // e.g. server process killed or network down
+    // event.code is usually 1006 in this case
+    alert('[close] Connection died');
+  }
+};
+
+socket.onerror = function(error) {
+  alert(`[error]`);
+};
+function getTxPool(){
+ socket.send('{"jsonrpc": "2.0","id": "1","method": "DERO.GetTxPool"}');
+}
+function getTxs(txs){
+let json = {};
+json.jsonrpc = "2.0";
+json.id = "1";
+json.method = "DERO.GetTransaction";
+json.params = {};
+json.params.txs_hashes = txs;
+
+json = JSON.stringify(json);
+ socket.send(json);
+}
+function close(){
+socket.close(1000, "Work complete");
+}
+
+
+
+</script>
+</head>
+<body>
+
+<button onclick="close()">X</button>
+<button onclick="getTxPool()">Get TX POOL</button>
+</body>
+</html>
